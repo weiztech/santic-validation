@@ -1,6 +1,25 @@
 Sanic Pydantic Validation
 =========================
 
+.. start-badges
+
+.. list-table::
+    :widths: 15 85
+    :stub-columns: 1
+
+    * - Package
+      - | |PyPI| |PyPI version| |Code style black|
+
+
+.. |PyPI| image:: https://img.shields.io/pypi/v/santic-validation.svg
+   :target: https://pypi.python.org/pypi/santic-validation/
+.. |PyPI version| image:: https://img.shields.io/pypi/pyversions/santic-validation.svg
+   :target: https://pypi.python.org/pypi/santic-validation/
+.. |Code style black| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/ambv/black
+
+.. end-badges
+
 Tools for help developers working with Sanic and Pydantic.
 
 Features
