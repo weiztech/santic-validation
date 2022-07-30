@@ -6,11 +6,14 @@ Sanic Pydantic Validation
 .. list-table::
     :widths: 15 85
     :stub-columns: 1
-
+    
+    * - Build
+      - | |Tox|
     * - Package
       - | |PyPI| |PyPI version| |Code style black|
 
-
+.. |Tox| image:: https://github.com/weiztech/santic-validation/actions/workflows/python-package.yml/badge.svg?branch=main
+   :target: https://github.com/weiztech/santic-validation/actions/workflows/python-package.yml
 .. |PyPI| image:: https://img.shields.io/pypi/v/santic-validation.svg
    :target: https://pypi.python.org/pypi/santic-validation/
 .. |PyPI version| image:: https://img.shields.io/pypi/pyversions/santic-validation.svg
