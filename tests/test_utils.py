@@ -1,6 +1,14 @@
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
-from santic_validation import async_validate_by_method
+# isort: off
+from santic_validation import (
+    MethodType,
+    SanticModel,
+    async_validate_by_method,
+    validate_method_fields,
+)
+
+# isort: on
 
 
 class PlanetSchema(BaseModel):
@@ -52,3 +60,53 @@ class TestAsyncValidate:
 
         assert is_valid is False
         assert errors == {"age_test": "Invalid value"}
+
+    async def test_validate_method_fields(self):
+        class Age(object):
+            value: int
+
+            def __init__(self, value):
+                self.value = value
+
+            @classmethod
+            def to_instance(cls, age: int):
+                return cls(value=age)
+
+        class UserSchema(SanticModel):
+            name: str
+            age: MethodType[int] = Field(method=Age.to_instance)
+
+            @property
+            def age_method_params(self):
+                return {"age": self.age}
+
+        data = {"name": "Zack", "age": 10}
+        user = UserSchema(**data)
+
+        await validate_method_fields(user)
+        assert data == user.dict()
+
+        await validate_method_fields(user, replace_value=True)
+        assert user.name == data["name"]
+        assert isinstance(user.age, Age) is True
+
+        async def multiply(value):
+            return value * 2
+
+        class PersonSchema(SanticModel):
+            name: str
+            age: MethodType[int] = Field(method=multiply)
+
+            @property
+            def age_method_params(self):
+                return {"value": self.age}
+
+        data = {"name": "Zack", "age": 10}
+        user = PersonSchema(**data)
+
+        await validate_method_fields(user)
+        assert data == user.dict()
+
+        data["age"] = data["age"] * 2
+        await validate_method_fields(user, replace_value=True)
+        assert data == user.dict()

@@ -1,4 +1,7 @@
+from inspect import iscoroutinefunction
 from typing import Any, Callable, Dict, TypedDict, TypeVar, Union
+
+from .fields import SanticModel
 
 Schema = TypeVar("Schema")
 
@@ -25,3 +28,22 @@ async def async_validate_by_method(
                 return error
 
     return True if not error else False, error or None
+
+
+async def validate_method_fields(schema: SanticModel, replace_value=False):
+    method_fields = getattr(schema, "_method_fields", None)
+    if not method_fields:
+        return
+
+    for name in method_fields:
+        method, params = (
+            schema.__fields__[name].field_info.extra.get("method"),
+            getattr(schema, f"{name}_method_params", {}),
+        )
+        if iscoroutinefunction(method):
+            value = await method(**params)
+        else:
+            value = method(**params)
+
+        if replace_value:
+            setattr(schema, name, value)

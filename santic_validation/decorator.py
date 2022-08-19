@@ -6,6 +6,9 @@ from pydantic import ValidationError
 from sanic import Request
 from sanic.exceptions import SanicException
 
+from .fields import SanticModel
+from .utils import validate_method_fields
+
 ARRAY_TYPES = {list, tuple}
 
 
@@ -30,6 +33,12 @@ def clean_data(schema, raw_data) -> Dict[str, any]:
         else:
             value = raw_data.get(hint_key)
 
+        if value and (hint_value == int or int in get_args(hint_value)):
+            if isinstance(value, (list, tuple)):
+                value = map(lambda x: int(x) if x.isdigit() else x, value)
+            else:
+                value = int(value) if value.isdigit() else value
+
         data[hint_key] = value
 
     return data
@@ -38,6 +47,7 @@ def clean_data(schema, raw_data) -> Dict[str, any]:
 def validate_schema(
     body: Optional[Type[object]] = None,
     query: Optional[Type[object]] = None,
+    method_replace_value=False,
 ):
     """
     Simple validation
@@ -72,6 +82,14 @@ def validate_schema(
                         )
 
                     kwargs["body"] = body(**cleaned_data)
+                    if isinstance(kwargs["body"], SanticModel):
+                        if kwargs.get("query"):
+                            kwargs["body"]._context = {"query": kwargs["query"]}
+
+                        await validate_method_fields(
+                            kwargs["body"], replace_value=method_replace_value
+                        )
+
             except ValidationError as err:
                 raise SanicException(
                     "Validation error",
@@ -82,6 +100,7 @@ def validate_schema(
                     },
                     status_code=400,
                 )
+
             retval = f(*args, **kwargs)
             if isawaitable(retval):
                 retval = await retval
