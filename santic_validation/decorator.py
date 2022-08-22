@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from sanic import Request
 from sanic.exceptions import SanicException
 
-from .fields import SanticModel
+from .fields import MethodType, SanticModel
 from .utils import validate_method_fields
 
 ARRAY_TYPES = {list, tuple}
@@ -18,7 +18,11 @@ def has_array_type(hint_value) -> Optional[bool]:
 
     list_args = get_args(hint_value)
     for args in list_args:
-        if get_origin(args) in ARRAY_TYPES:
+        origin = get_origin(args)
+        if origin == MethodType:
+            origin = get_origin(args.__args__[0])
+
+        if origin in ARRAY_TYPES:
             return True
 
 
@@ -32,12 +36,6 @@ def clean_data(schema, raw_data) -> Dict[str, any]:
             value = raw_data.getlist(hint_key)
         else:
             value = raw_data.get(hint_key)
-
-        if value and (hint_value == int or int in get_args(hint_value)):
-            if isinstance(value, (list, tuple)):
-                value = map(lambda x: int(x) if x.isdigit() else x, value)
-            else:
-                value = int(value) if value.isdigit() else value
 
         data[hint_key] = value
 

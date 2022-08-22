@@ -30,6 +30,8 @@ Features
 
 - validate_schema
 - async_validate_by_method
+- SanticModel
+- `MethodType` Field
 
 Installation
 ------------

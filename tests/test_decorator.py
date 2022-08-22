@@ -12,7 +12,7 @@ class BodySchema(BaseModel):
     name: str
     age: int
     list_address: List[str]
-    list_ids: Optional[List[int]]
+    list_ids: List[int]
 
 
 class QuerySchema(BaseModel):
@@ -27,7 +27,12 @@ def make_address(value: str):
     return f"Address: {value}"
 
 
+def convert_ids(value: str):
+    return f"Ids: {value}"
+
+
 class AddressSchema(SanticModel):
+    ids: Optional[MethodType[List[int]]] = Field(method=convert_ids)
     number: MethodType[int] = Field(method=address_number)
     address: MethodType[str] = Field(method=make_address)
 
@@ -40,6 +45,11 @@ class AddressSchema(SanticModel):
     def number_method_params(self):
         query: QuerySchema = self._context.get("query")
         return {"value": f"{self.number} ({query.location})"}
+
+    @property
+    def ids_method_params(self):
+        query: QuerySchema = self._context.get("query")
+        return {"value": f"{self.ids} ({query.location})"}
 
 
 class QueryAddressSchema(BaseModel):
@@ -127,7 +137,6 @@ class TestValidateSchema:
             params=query,
             headers=headers,
         )
-
         assert response.status_code == 200
         assert response.json == {
             "body": data,
@@ -159,7 +168,7 @@ class TestValidateSchema:
 
     def test_validate_method_fields(self, app):
         # test validate methods
-        data = {"address": "my-address", "number": 101}
+        data = {"address": "my-address", "number": 101, "ids": ["1", 2]}
         query = {"location": "Earth"}
 
         headers = {"content-type": "application/json"}
@@ -169,7 +178,7 @@ class TestValidateSchema:
             params=query,
             headers=headers,
         )
-
+        data["ids"] = [1, 2]
         assert response.status_code == 200
         assert response.json == {
             "body": data,
@@ -183,6 +192,7 @@ class TestValidateSchema:
             params=query,
             headers=headers,
         )
+
         assert response.status_code == 200
         assert response.json == {
             "body": data,
@@ -190,7 +200,7 @@ class TestValidateSchema:
         }
 
         # test with replace value
-        data = {"address": "my-address", "number": 101}
+        data = {"address": "my-address", "number": 101, "ids": ["1", 2]}
         query = {"location": "Earth"}
 
         headers = {"content-type": "application/json"}
@@ -204,6 +214,9 @@ class TestValidateSchema:
         resp_data = data.copy()
         resp_data["address"] = f"Address: {data['address']} ({query['location']})"
         resp_data["number"] = f"Number: {data['number']} ({query['location']})"
+        resp_data[
+            "ids"
+        ] = f"Ids: {[int(num) for num in data['ids']]} ({query['location']})"
 
         assert response.status_code == 200
         assert response.json == {
@@ -225,6 +238,7 @@ class TestValidateSchema:
         resp_data = data.copy()
         resp_data["address"] = f"Address: {data['address']} ({query['location']})"
         resp_data["number"] = f"Number: {data['number']} ({query['location']})"
+        resp_data["ids"] = f"Ids: None ({query['location']})"
 
         assert response.status_code == 200
         assert response.json == {

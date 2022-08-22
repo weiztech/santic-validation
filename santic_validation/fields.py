@@ -15,11 +15,18 @@ class MethodType(Generic[ValueType]):
     @classmethod
     def validate(cls, v, field: ModelField, values):
         value_type = field.sub_fields[0] if field.sub_fields else None
+
         if not value_type:
             raise ValueError("Value type not found")
 
-        if not isinstance(v, value_type.type_):
-            raise TypeError(f"Expected type {value_type.type_.__name__}")
+        if value_type.type_ == int:
+            try:
+                if isinstance(v, list):
+                    v = [int(num) for num in v]
+                else:
+                    v = int(v)
+            except ValueError:
+                raise TypeError(f"Expected type {value_type.type_.__name__}")
 
         return v
 
