@@ -13,6 +13,7 @@ class BodySchema(BaseModel):
     age: int
     list_address: List[str]
     list_ids: List[int]
+    quality: str = "good"
 
 
 class QuerySchema(BaseModel):
@@ -116,9 +117,11 @@ class TestValidateSchema:
             headers=headers,
         )[1]
 
+        body = payload.copy()
+        body["quality"] = "good"
         assert response.status_code == 200
         assert response.json == {
-            "body": payload,
+            "body": body,
             "query": query,
         }
 
@@ -137,9 +140,12 @@ class TestValidateSchema:
             params=query,
             headers=headers,
         )
+        body = payload.copy()
+        body["quality"] = "good"
+
         assert response.status_code == 200
         assert response.json == {
-            "body": data,
+            "body": body,
             "query": query,
         }
 
@@ -163,7 +169,6 @@ class TestValidateSchema:
             params={"page": 10},
             headers=headers,
         )[1]
-
         assert response.status_code == 400
 
     def test_validate_method_fields(self, app):

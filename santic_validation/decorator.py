@@ -30,14 +30,18 @@ def clean_data(schema, raw_data) -> Dict[str, any]:
     hints = get_type_hints(schema)
     data = {}
 
-    for hint_key, hint_value in hints.items():
-        is_array = has_array_type(hint_value)
-        if is_array:
-            value = raw_data.getlist(hint_key)
-        else:
-            value = raw_data.get(hint_key)
+    for key in raw_data:
+        if not hints.get(key):
+            continue
 
-        data[hint_key] = value
+        is_array = has_array_type(hints[key])
+        if is_array:
+            value = raw_data.getlist(key)
+        else:
+            value = raw_data.get(key)
+
+        if value:
+            data[key] = value
 
     return data
 
